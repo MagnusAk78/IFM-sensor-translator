@@ -3,47 +3,44 @@ package control
 import akka.actor.{ Actor, ActorRef, Props }
 import akka.io.{ IO, Tcp }
 import akka.util.ByteString
+import model.Sensor
+import scala.collection.mutable.ListMap
+
+case object AskLatestSensorMessage
 
 class SensorDataHandler extends Actor with akka.actor.ActorLogging {
-
-  import Tcp._
   
-  val start = ByteString("start")
-  val end = ByteString("end")
-  val dash = ByteString("-")
-  val separator = ByteString("<>")
+  val sensorMap = ListMap[Long, Sensor]()
   
-  var currentData = ByteString.empty
+  val hexPrefix = "0x"
   
-  def handleSensorData(sensorData: ByteString) {
-    val dataTuple = sensorData.splitAt(sensorData.indexOfSlice(dash))
-    log.info("sensor: " + dataTuple._1.utf8String)
-    log.info("value: " + dataTuple._2.drop(dash.length).utf8String)
+  def hexStringToLong(hexString: String): Long = {
+    Integer.decode(hexPrefix + hexString).toLong
   }
     
   def receive = {
-    case Received(newData) => {
-      log.info("Receiving data: " + newData.utf8String)
-      currentData = currentData ++ newData
-      while(currentData.containsSlice(start) && currentData.containsSlice(end)) {
-
-        //Drop start
-        currentData = currentData.drop(currentData.indexOfSlice(start) + start.length)
+    case RawSensorData(value1, value2, value3, value4, value5, value6, value7) => {
         
-        //Loop while multiple sensor values
-        while(currentData.containsSlice(separator)) {
-          val separatorIndex = currentData.indexOfSlice(separator)
-          val dataTuple = currentData.splitAt(separatorIndex)
-          log.info("separatorIndex:" + separatorIndex)
-          log.info("dataTuple._1:" + dataTuple._1.utf8String)
-          log.info("dataTuple._2:" + dataTuple._2.utf8String)
-          handleSensorData(dataTuple._1)
-          currentData = dataTuple._2.drop(separator.length)
-        }
-        handleSensorData(currentData.splitAt(currentData.indexOfSlice(end))._1)
-        currentData = currentData.drop(currentData.indexOfSlice(end) + end.length)
-      }
+      log.info("SensorDataHandler, value1: " + value1)
+      log.info("SensorDataHandler, value2: " + value2)
+      log.info("SensorDataHandler, value3: " + value3)
+      log.info("SensorDataHandler, value4: " + value4)
+      log.info("SensorDataHandler, value5: " + value5)
+      log.info("SensorDataHandler, value6: " + value6)
+      log.info("SensorDataHandler, value7: " + value7)
+      
+      val timestamp = System.currentTimeMillis
+      sensorMap.put(timestamp, Sensor(System.currentTimeMillis, 
+          value1.toLong, 
+          value2.toLong,
+          value3.toLong,
+          hexStringToLong(value4),
+          value5,
+          value6,
+          hexStringToLong(value7)))
     }
-    case PeerClosed     => context stop self
+    case AskLatestSensorMessage => {
+      sender ! sensorMap.lastOption
+    }
   }
 }

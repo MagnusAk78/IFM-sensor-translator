@@ -1,7 +1,7 @@
 import socket
 import time
 
-ip, port = 'localhost', 3010
+ip, port = 'localhost', 34100
 
 # create an ipv4 (AF_INET) socket object using the tcp protocol (SOCK_STREAM)
 client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -10,12 +10,10 @@ client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 # client.connect((target, port))
 client.connect((ip, port))
 
-i = 0
 # send some data
 while True:
-    client.send('startsensor1-' + str(i) + '<>sensor2-' + str(1000 - i) + 'end')
-    time.sleep(1)
-    i = i+1
-    if i > 10000:
-        i = 0
-    print 'sent data, i = ' + str(i)
+    myfile = open('testdata.d', 'r')
+    for line in myfile: 
+        client.send(line)
+        time.sleep(0.5)
+        print line

@@ -1,31 +1,31 @@
 package rest
 
-import akka.actor.Actor
+import akka.actor.{ Actor, ActorRef }
+import scala.concurrent.Await
+import akka.pattern.ask
+import akka.util.Timeout
+import scala.concurrent.duration._
 import spray.routing._
 import spray.http._
 import MediaTypes._
 
-import model.SensorIntegerJsonSupport._
-import model.SensorInteger
+import model.SensorJsonSupport._
+import model.Sensor
 import spray.json._
+
+import control.AskLatestSensorMessage
 
 // we don't implement our route structure directly in the service actor because
 // we want to be able to test it independently, without having to spin up an actor
-class MyServiceActor extends Actor with MyService {
+class MyServiceActor(sensorDataHandler: ActorRef) extends Actor with HttpService {
 
   // the HttpService trait defines only one abstract member, which
   // connects the services environment to the enclosing actor or test
   def actorRefFactory = context
 
-  // this actor only runs our route, but you could add
-  // other things here, like request stream processing
-  // or timeout handling
   def receive = runRoute(myRoute)
-}
-
-
-// this trait defines our service behavior independently from the service actor
-trait MyService extends HttpService {
+  
+  implicit val timeout = Timeout(5 seconds)
 
   val myRoute = {
     import spray.httpx.SprayJsonSupport.sprayJsonMarshaller
@@ -36,10 +36,7 @@ trait MyService extends HttpService {
         get {
           respondWithMediaType(`application/json`) { 
             complete {
-              List(SensorInteger("Sensor 1", 5, System.currentTimeMillis),
-                SensorInteger("Sensor 2", 5, System.currentTimeMillis),
-                SensorInteger("Sensor 3", 5, System.currentTimeMillis),
-                SensorInteger("Sensor 4", 5, System.currentTimeMillis))
+              Sensor(System.currentTimeMillis, 0L, 0L, 0L, 0L,"","",0L)
             }
           }
         }
@@ -60,7 +57,7 @@ trait MyService extends HttpService {
           get {
             respondWithMediaType(`application/json`) { 
               complete {
-                SensorInteger(id, 34, System.currentTimeMillis)
+                Sensor(System.currentTimeMillis, 0L, 0L, 0L, 0L,"","",0L)
               }
             }
           }
@@ -69,7 +66,9 @@ trait MyService extends HttpService {
           get {
             respondWithMediaType(`application/json`) { 
               complete {
-                SensorInteger(id, 34, System.currentTimeMillis)
+                val future = sensorDataHandler ? AskLatestSensorMessage
+                val result = Await.result(future, timeout.duration).asInstanceOf[Option[Sensor]]
+                result
               }
             }
           }
@@ -78,7 +77,7 @@ trait MyService extends HttpService {
           get {
             respondWithMediaType(`application/json`) { 
               complete {
-                SensorInteger(id, 34, System.currentTimeMillis)
+                Sensor(System.currentTimeMillis, 0L, 0L, 0L, 0L,"","",0L)
               }
             }
           }
