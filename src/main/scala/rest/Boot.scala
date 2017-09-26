@@ -33,5 +33,5 @@ object Boot extends App {
   IO(Http) ? Http.Bind(service, interface = "", port = 8080)
   
   // start a new TCP server on port 3010 with our sensorReader actor as the handler
-  IO(Tcp) ! Bind(sensorReader, new InetSocketAddress("192.168.1.77", 34100))
+  IO(Tcp) ! Bind(sensorReader, new InetSocketAddress("localhost", 34100))
 }

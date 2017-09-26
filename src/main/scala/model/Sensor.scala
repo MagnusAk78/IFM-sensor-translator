@@ -12,7 +12,14 @@ case class Sensor(timestamp: Long,
     value6: String,
     value7: Long
     )
+    
+case class SensorInfo( 
+    sensorId: Long, 
+    values: Int,
+    latestTimestamp: Long
+    )    
 
 object SensorJsonSupport extends DefaultJsonProtocol {
    implicit val SensorFormats = jsonFormat8(Sensor)
+   implicit val SensorInfoFormats = jsonFormat3(SensorInfo)
 }
