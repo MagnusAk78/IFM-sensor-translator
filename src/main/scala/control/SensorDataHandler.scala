@@ -7,6 +7,7 @@ import model._
 import scala.collection.mutable.ListMap
 import scala.collection.mutable.ListBuffer
 import model.RawSensorData
+import rest.Settings
 
 // SensorDataHandler actor messages
 case object AskSensorsInfoMessage
@@ -28,8 +29,11 @@ class SensorDataHandler extends Actor with akka.actor.ActorLogging {
   val TN2405 = "TN2405" //Temperature sensor
 
   // Information
+  
+  //Get settings
+  val settings = Settings(context.system)  
 
-  val MAX_NUMBER_OF_VALUES = 1000
+  val MAX_NUMBER_OF_VALUES = settings.MaxNumberOfProcessData
 
   val sensorInfoMap = ListMap[String, SensorInfo]()
   val processDataMap = ListMap[String, ListBuffer[ProcessData]]()

@@ -32,6 +32,9 @@ object Boot extends App {
   // start a new HTTP server on port 8080 with our service actor as the handler
   IO(Http) ? Http.Bind(service, interface = "", port = 8080)
 
+  //Get settings
+  val settings = Settings(system)
+  
   // start a new TCP server on port 3010 with our sensorReader actor as the handler
-  IO(Tcp) ! Bind(sensorReader, new InetSocketAddress("localhost", 34100))
+  IO(Tcp) ! Bind(sensorReader, new InetSocketAddress(settings.ServerBindIp, settings.ServerBindPort))
 }
