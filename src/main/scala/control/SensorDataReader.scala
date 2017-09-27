@@ -3,6 +3,7 @@ package control
 import akka.actor.{ Actor, ActorRef, Props }
 import akka.io.{ IO, Tcp }
 import akka.util.ByteString
+import model.RawSensorData
 
 class SensorDataReader(sensorDataHandler: ActorRef) extends Actor with akka.actor.ActorLogging {
 
@@ -66,15 +67,17 @@ class SensorDataReader(sensorDataHandler: ActorRef) extends Actor with akka.acto
 
     val value7 = tuple6._2.drop(semiColon.length)
 
-    log.info("value1: " + value1.utf8String)
-    log.info("value2: " + value2.utf8String)
-    log.info("value3: " + value3.utf8String)
-    log.info("value4: " + value4.utf8String)
-    log.info("value5: " + value5.utf8String)
-    log.info("value6: " + value6.utf8String)
-    log.info("value7: " + value7.utf8String)
+    /* 
+    log.debug("value1: " + value1.utf8String)
+    log.debug("value2: " + value2.utf8String)
+    log.debug("value3: " + value3.utf8String)
+    log.debug("value4: " + value4.utf8String)
+    log.debug("value5: " + value5.utf8String)
+    log.debug("value6: " + value6.utf8String)
+    log.debug("value7: " + value7.utf8String)
+    */
 
-    sensorDataHandler ! RawSensorData(value1.utf8String, value2.utf8String, value3.utf8String,
-      value4.utf8String, value5.utf8String, value6.utf8String, value7.utf8String)
+    sensorDataHandler ! RawSensorData(AY1020.utf8String.trim, value1.utf8String.trim, value2.utf8String.trim, value3.utf8String.trim,
+      value4.utf8String.trim, value5.utf8String.trim, value6.utf8String.trim, value7.utf8String.trim, System.currentTimeMillis)
   }
 }

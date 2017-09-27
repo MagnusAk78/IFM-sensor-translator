@@ -15,5 +15,6 @@ while True:
     myfile = open('testdata.d', 'r')
     for line in myfile: 
         client.send(line)
+        print line        
         time.sleep(0.5)
-        print line
+        

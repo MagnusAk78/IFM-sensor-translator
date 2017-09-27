@@ -10,8 +10,7 @@ import spray.http._
 import MediaTypes._
 
 import model.SensorJsonSupport._
-import model.Sensor
-import model.SensorInfo
+import model._
 import spray.json._
 
 import control.AskSensorInfoMessage
@@ -56,7 +55,7 @@ trait MyService extends HttpService {
             respondWithMediaType(`application/json`) {
               complete {
                 val future = sensorDataHandler ? AskSensorListMessage
-                val result = Await.result(future, timeout.duration).asInstanceOf[List[Long]]
+                val result = Await.result(future, timeout.duration).asInstanceOf[List[String]]
                 result
               }
             }
@@ -64,7 +63,7 @@ trait MyService extends HttpService {
         }
     } ~
       pathPrefix("sensor") {
-        pathPrefix(LongNumber) { id: Long =>
+        pathPrefix(Segment) { id: String =>
           path("info") {
             get {
               respondWithMediaType(`application/json`) {
@@ -81,7 +80,7 @@ trait MyService extends HttpService {
                 respondWithMediaType(`application/json`) {
                   complete {
                     val future = sensorDataHandler ? AskLatestSensorMessage(id)
-                    val result = Await.result(future, timeout.duration).asInstanceOf[Option[Sensor]]
+                    val result = Await.result(future, timeout.duration).asInstanceOf[Option[ProcessData]]
                     result.get
                   }
                 }
@@ -92,7 +91,7 @@ trait MyService extends HttpService {
                 respondWithMediaType(`application/json`) {
                   complete {
                     val future = sensorDataHandler ? AskTimestampSensorMessage(id, timestamp)
-                    val result = Await.result(future, timeout.duration).asInstanceOf[List[Sensor]]
+                    val result = Await.result(future, timeout.duration).asInstanceOf[List[ProcessData]]
                     result
                   }
                 }
