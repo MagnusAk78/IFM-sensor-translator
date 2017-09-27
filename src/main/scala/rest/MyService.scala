@@ -9,15 +9,14 @@ import spray.routing._
 import spray.http._
 import MediaTypes._
 
-import model.SensorJsonSupport._
-import model._
 import spray.json._
 
-import control.AskSensorInfoMessage
-import control.AskLatestSensorMessage
-import control.AskTimestampSensorMessage
-import control.AskSensorListMessage
-
+import model.IfmJsonSupport._
+import model.ProcessData
+import model.SensorInfo
+import model.SensorStatus
+import model.ErrorMessage
+import control._
 
 // we don't implement our route structure directly in the service actor because
 // we want to be able to test it independently, without having to spin up an actor
@@ -33,7 +32,7 @@ class MyServiceActor(override val sensorDataHandler: ActorRef) extends Actor wit
 trait MyService extends HttpService {
 
   val sensorDataHandler: ActorRef
-  
+
   implicit val timeout = Timeout(5 seconds)
 
   val myRoute = {
@@ -45,7 +44,9 @@ trait MyService extends HttpService {
         get {
           respondWithMediaType(`application/json`) {
             complete {
-              Sensor(System.currentTimeMillis, 0L, 0L, 0L, 0L, "", "", 0L)
+              val future = sensorDataHandler ? AskSensorsInfoMessage
+              val result = Await.result(future, timeout.duration).asInstanceOf[List[SensorInfo]]
+              result
             }
           }
         }
@@ -54,8 +55,19 @@ trait MyService extends HttpService {
           get {
             respondWithMediaType(`application/json`) {
               complete {
-                val future = sensorDataHandler ? AskSensorListMessage
+                val future = sensorDataHandler ? AskSensorsListMessage
                 val result = Await.result(future, timeout.duration).asInstanceOf[List[String]]
+                result
+              }
+            }
+          }
+        } ~
+        path("status") {
+          get {
+            respondWithMediaType(`application/json`) {
+              complete {
+                val future = sensorDataHandler ? AskSensorsStatusMessage
+                val result = Await.result(future, timeout.duration).asInstanceOf[List[SensorStatus]]
                 result
               }
             }
@@ -69,19 +81,25 @@ trait MyService extends HttpService {
               respondWithMediaType(`application/json`) {
                 complete {
                   val future = sensorDataHandler ? AskSensorInfoMessage(id)
-                  val result = Await.result(future, timeout.duration).asInstanceOf[SensorInfo]
-                  result
+                  val result = Await.result(future, timeout.duration).asInstanceOf[Option[SensorInfo]]
+                  result match {
+                    case Some(sensorInfo) => sensorInfo
+                    case None => ErrorMessage("Requested data was not found")
+                  }
                 }
               }
             }
           } ~
-            path("newest") {
+            path("last") {
               get {
                 respondWithMediaType(`application/json`) {
                   complete {
-                    val future = sensorDataHandler ? AskLatestSensorMessage(id)
+                    val future = sensorDataHandler ? AskLastProcessDataMessage(id)
                     val result = Await.result(future, timeout.duration).asInstanceOf[Option[ProcessData]]
-                    result.get
+                    result match {
+                      case Some(sensorInfo) => sensorInfo
+                      case None => ErrorMessage("Requested data was not found")
+                    }
                   }
                 }
               }
@@ -90,9 +108,23 @@ trait MyService extends HttpService {
               get {
                 respondWithMediaType(`application/json`) {
                   complete {
-                    val future = sensorDataHandler ? AskTimestampSensorMessage(id, timestamp)
+                    val future = sensorDataHandler ? AskProcessDataAfterTimestampMessage(id, timestamp)
                     val result = Await.result(future, timeout.duration).asInstanceOf[List[ProcessData]]
                     result
+                  }
+                }
+              }
+            } ~
+            path("status") {
+              get {
+                respondWithMediaType(`application/json`) {
+                  complete {
+                    val future = sensorDataHandler ? AskSensorStatusMessage(id)
+                    val result = Await.result(future, timeout.duration).asInstanceOf[Option[SensorStatus]]
+                    result match {
+                      case Some(sensorInfo) => sensorInfo
+                      case None => ErrorMessage("Requested data was not found")
+                    }
                   }
                 }
               }
@@ -103,11 +135,21 @@ trait MyService extends HttpService {
         get {
           respondWithMediaType(`text/html`) { // XML is marshalled to `text/xml` by default, so we simply override here
             complete {
+              """
               <html>
                 <body>
                   <h1>IMF sensor service</h1>
+									<br>
+									/sensors/info <br>
+									/sensors/list <br>
+									/sensors/status <br>
+									/sensor/id:String/info <br>
+									/sensor/id:String/last => Get last received process data<br>
+									/sensor/id:String/timestamp:Long => Get all process data after timestamp<br>
+									/sensor/id:String/status <br>
                 </body>
               </html>
+              """
             }
           }
         }

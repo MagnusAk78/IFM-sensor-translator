@@ -77,7 +77,8 @@ class SensorDataReader(sensorDataHandler: ActorRef) extends Actor with akka.acto
     log.debug("value7: " + value7.utf8String)
     */
 
-    sensorDataHandler ! RawSensorData(AY1020.utf8String.trim, value1.utf8String.trim, value2.utf8String.trim, value3.utf8String.trim,
-      value4.utf8String.trim, value5.utf8String.trim, value6.utf8String.trim, value7.utf8String.trim, System.currentTimeMillis)
+    sensorDataHandler ! RawSensorData(AY1020.utf8String.trim, value1.utf8String.trim, value2.utf8String.trim,
+      value3.utf8String.trim, value4.utf8String.trim, value5.utf8String.trim, value6.utf8String.trim,
+      value7.utf8String.trim, System.currentTimeMillis)
   }
 }
