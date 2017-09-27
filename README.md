@@ -8,5 +8,6 @@ A RESTful server that translates specific TCP streams from IFM a master (I/O-lin
 src/main/resources/application.conf
 
 ## sbt
-re-start (start the server)
-re-stop (stop the server)
+`re-start` (start the server)
+
+`re-stop` (stop the server)
