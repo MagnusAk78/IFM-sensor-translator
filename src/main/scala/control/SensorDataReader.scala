@@ -15,19 +15,17 @@ class SensorDataReader(sensorDataHandler: ActorRef) extends Actor with akka.acto
 
   def receive = {
     case Received(data) => {
-      log.info("Receiving data: " + data.utf8String)
+      log.debug("Receiving data: " + data.utf8String)
 
       val lines = scala.collection.mutable.ListBuffer[ByteString]()
 
       var remainingData = data
       while (remainingData.containsSlice(newLine)) {
         val tuple = remainingData.splitAt(remainingData.indexOfSlice(newLine))
-        log.info("Adding line: " + tuple._1.utf8String)
         lines.append(tuple._1)
         remainingData = tuple._2.drop(newLine.length)
       }
       if (remainingData.length > 10) {
-        log.info("Adding line: " + remainingData.utf8String)
         lines.append(remainingData)
       }
 

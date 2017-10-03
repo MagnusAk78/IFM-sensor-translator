@@ -19,3 +19,5 @@ test-output/
 
 .cache-main
 .cache-tests
+
+/log
