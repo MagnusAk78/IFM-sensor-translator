@@ -10,9 +10,11 @@ import com.typesafe.config.Config
 import java.util.concurrent.TimeUnit
  
 class SettingsImpl(config: Config) extends Extension {
-  val ServerBindIp: String = config.getString("ifm-master-server.bind-server-ip")
-  val ServerBindPort: Int = config.getInt("ifm-master-server.bind-server-port")
-  val MaxNumberOfProcessData: Int = config.getInt("ifm-master-server.max-number-of-process-data")
+  val HttpServerBindIp: String = config.getString("spray.can.server.bind-server-ip")
+  val HttpServerBindPort: Int = config.getInt("spray.can.server.bind-server-port")
+  val IfmServerBindIp: String = config.getString("ifm-master.server.bind-server-ip")
+  val IfmServerBindPort: Int = config.getInt("ifm-master.server.bind-server-port")
+  val MaxNumberOfProcessData: Int = config.getInt("ifm-master.server.max-number-of-process-data")
 }
 object Settings extends ExtensionId[SettingsImpl] with ExtensionIdProvider {
  
