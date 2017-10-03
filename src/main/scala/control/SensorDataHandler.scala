@@ -147,7 +147,7 @@ class SensorDataHandler extends Actor with akka.actor.ActorLogging {
           }
 
           while (list.size > MAX_NUMBER_OF_VALUES) {
-            list.dropRight(1)
+            list.remove(list.size-1)
           }
         }
         case _ => {
